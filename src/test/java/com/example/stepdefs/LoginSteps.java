@@ -5,27 +5,38 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.testng.Assert;
-import org.openqa.selenium.chrome.ChromeOptions;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 
 public class LoginSteps {
     private WebDriver driver;
+    private Path chromeProfileDir;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         WebDriverManager.chromedriver().setup();
-        // remove headless if you want a visible browser
+
+        // Create a unique temp directory for this session's profile
+        chromeProfileDir = Files.createTempDirectory("chrome-profile-");
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments(
+            "--user-data-dir=" + chromeProfileDir.toAbsolutePath(),
             "--no-sandbox",
             "--disable-dev-shm-usage",
             "--disable-gpu",
             "--remote-allow-origins=*"
         );
+
         driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
     }
@@ -74,7 +85,6 @@ public class LoginSteps {
     @Then("I should not see any error or success message")
     public void assertNoFlash() {
         List<WebElement> flashes = driver.findElements(By.id("flash"));
-        // either absent or not displayed or empty text
         boolean noneVisible = flashes.isEmpty() ||
             flashes.stream().allMatch(f -> !f.isDisplayed() || f.getText().trim().isEmpty());
         Assert.assertTrue(noneVisible, "Expected no flash messages, but found: " + flashes.size());
@@ -82,13 +92,11 @@ public class LoginSteps {
 
     @Then("I click on the logout button")
     public void clickLogout() {
-        // the logout button appears only on secure area
         driver.findElement(By.cssSelector("a.button.secondary.radius")).click();
     }
 
     @Then("I should be back on the login page with message containing {string}")
     public void assertLoggedOut(String expected) {
-        // verify URL is /login and flash contains expected text
         Assert.assertTrue(driver.getCurrentUrl().endsWith("/login"),
             "Expected to be on /login, but was: " + driver.getCurrentUrl());
         WebElement flash = driver.findElement(By.id("flash"));
@@ -97,9 +105,15 @@ public class LoginSteps {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if (driver != null) {
             driver.quit();
+        }
+        if (chromeProfileDir != null) {
+            Files.walk(chromeProfileDir)
+                 .sorted(Comparator.reverseOrder())
+                 .map(Path::toFile)
+                 .forEach(File::delete);
         }
     }
 }
