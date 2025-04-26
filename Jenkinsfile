@@ -3,7 +3,7 @@ pipeline {
 
   tools {
     // must match your Global Tool Configuration
-    allure 'Allure-2.18.1'
+    allure 'Allure-2.34.0'
   }
 
   environment {
