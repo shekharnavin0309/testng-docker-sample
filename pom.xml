@@ -7,53 +7,102 @@
   <artifactId>testng-docker-sample</artifactId>
   <version>1.0-SNAPSHOT</version>
 
+  <properties>
+    <!-- Java version -->
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
+    <!-- Surefire version -->
+    <surefire.plugin.version>3.0.0-M7</surefire.plugin.version>
+  </properties>
+
   <dependencies>
+    <!-- Selenium WebDriver -->
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>4.7.2</version>
+    </dependency>
+
+    <!-- WebDriverManager (for auto driver binaries) -->
+    <dependency>
+      <groupId>io.github.bonigarcia</groupId>
+      <artifactId>webdrivermanager</artifactId>
+      <version>5.4.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Cucumber-Java -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>7.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Cucumber-TestNG -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-testng</artifactId>
+      <version>7.11.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- TestNG -->
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
       <version>7.9.0</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Allure TestNG integration -->
     <dependency>
       <groupId>io.qameta.allure</groupId>
       <artifactId>allure-testng</artifactId>
       <version>2.22.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
-  <properties>
-    <!-- Tell Maven which Java version to compile & target -->
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
-    <maven.compiler.release>17</maven.compiler.release>
-  </properties>
-
   <build>
     <plugins>
-      <!-- Surefire plugin for TestNG -->
+      <!-- Compiler plugin (Java 17) -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
         <configuration>
-          <suiteXmlFiles>
-            <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
-          </suiteXmlFiles>
-          <!-- Allure TestNG listener -->
-          <listeners>
-            <listener>io.qameta.allure.testng.AllureTestNg</listener>
-          </listeners>
+          <release>${maven.compiler.release}</release>
         </configuration>
       </plugin>
 
-      <!-- Site plugin with Surefire report -->
+      <!-- Surefire plugin (runs TestNG/Cucumber) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.plugin.version}</version>
+        <configuration>
+          <!-- point at your TestNG suite -->
+          <includes>
+            <include>**/*CucumberTestRunner.java</include>
+          </includes>
+          <!-- include the Allure listener -->
+          <listeners>
+            <listener>io.qameta.allure.testng.AllureTestNg</listener>
+          </listeners>
+          <!-- (optional) speed up classloading -->
+          <useSystemClassLoader>false</useSystemClassLoader>
+        </configuration>
+      </plugin>
+
+      <!-- Site plugin, if you still need it -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.12.1</version>
       </plugin>
 
-      <!-- Allure Maven integration -->
+      <!-- Allure Maven plugin (for generating reports) -->
       <plugin>
         <groupId>io.qameta.allure</groupId>
         <artifactId>allure-maven</artifactId>
@@ -67,11 +116,11 @@
 
   <reporting>
     <plugins>
-      <!-- Surefire Report for site generation -->
+      <!-- Surefire report for a site -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>${surefire.plugin.version}</version>
       </plugin>
     </plugins>
   </reporting>

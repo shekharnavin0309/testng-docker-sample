@@ -1,7 +1,8 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
-<suite name="SampleSuite">
-  <test name="SampleTest">
+<suite name="All Tests">
+  <test name="Smoke Suite">
     <classes>
+      <!-- Replace with your actual @Test classes: -->
       <class name="com.example.SampleTest"/>
     </classes>
   </test>

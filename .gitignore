@@ -10,6 +10,8 @@
 .DS_Store
 Thumbs.db
 
+/allure-results/
+
 ## Logs
 *.log
 
