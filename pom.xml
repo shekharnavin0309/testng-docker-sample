@@ -7,11 +7,6 @@
   <artifactId>testng-docker-sample</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <listeners>
-    <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-  </listeners>
-
-
   <dependencies>
     <dependency>
       <groupId>org.testng</groupId>
@@ -30,50 +25,54 @@
     <!-- Tell Maven which Java version to compile & target -->
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <!-- (Optional) ensure plugins use the same Java version -->
     <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <build>
     <plugins>
+      <!-- Surefire plugin for TestNG -->
       <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M7</version>
-          <configuration>
-            <!-- Tell Surefire to use TestNG and pick up suite file(s) -->
-            <suiteXmlFiles>
-              <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
-            </suiteXmlFiles>
-            <!-- Configure Allure’s TestNG listener here -->
-            <listeners>
-              <listener>io.qameta.allure.testng.AllureTestNg</listener>
-            </listeners>
-          </configuration>
-        </plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M7</version>
+        <configuration>
+          <suiteXmlFiles>
+            <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+          </suiteXmlFiles>
+          <!-- Allure TestNG listener -->
+          <listeners>
+            <listener>io.qameta.allure.testng.AllureTestNg</listener>
+          </listeners>
+        </configuration>
+      </plugin>
+
+      <!-- Site plugin with Surefire report -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <version>3.12.1</version>
-        <configuration>
-          <reportPlugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-report-plugin</artifactId>
-            </plugin>
-          </reportPlugins>
-        </configuration>
       </plugin>
 
+      <!-- Allure Maven integration -->
       <plugin>
         <groupId>io.qameta.allure</groupId>
         <artifactId>allure-maven</artifactId>
         <version>2.11.2</version>
         <configuration>
-          <resultsDirectory>target/allure-results</resultsDirectory>
+          <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
         </configuration>
       </plugin>
     </plugins>
-</build>
-  
+  </build>
+
+  <reporting>
+    <plugins>
+      <!-- Surefire Report for site generation -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>3.0.0-M7</version>
+      </plugin>
+    </plugins>
+  </reporting>
 </project>
