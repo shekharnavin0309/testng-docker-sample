@@ -47,8 +47,13 @@ pipeline {
   }
 
   post {
-    always { cleanWs() }
-    success { echo '✅ Done!' }
-    failure { echo '❌ Build failed.' }
+    always {
+      // Publish Allure report
+      allure([
+        results: [[path: 'target/allure-results']],
+        reportBuildPolicy: 'ALWAYS'   // generate even if empty
+      ])
+      cleanWs()
+    }
   }
 }
