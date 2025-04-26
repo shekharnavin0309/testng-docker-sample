@@ -30,7 +30,7 @@ public class LoginSteps {
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments(
-            options.addArguments("--headless=new"),
+            "--headless=new",
             "--user-data-dir=" + chromeProfileDir.toAbsolutePath(),
             "--no-sandbox",
             "--disable-dev-shm-usage",
