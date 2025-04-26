@@ -1,13 +1,20 @@
 pipeline {
   agent any
 
+  tools {
+    // must match your Global Tool Configuration
+    allure 'Allure-2.18.1'
+  }
+
   environment {
     MVN = 'mvn -B -V'
   }
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Build & Test') {
@@ -16,43 +23,45 @@ pipeline {
       }
       post {
         always {
+          // publish the XML results to Jenkins
           junit '**/target/surefire-reports/*.xml'
         }
       }
     }
 
-    stage('Publish HTML Report') {
+    stage('Publish Reports') {
       steps {
-        // publish the Maven Surefire site report:
-        publishHTML([
-          reportName: 'Surefire Site Report',
-          reportDir: 'target/site', 
-          reportFiles: 'surefire-report.html',
-          keepAll: true,
-          alwaysLinkToLastBuild: true,
-          allowMissing: false
+        // 1) Allure Report
+        allure([
+          results: [[path: 'target/allure-results']],
+          reportBuildPolicy: 'ALWAYS'
         ])
 
-        // publish TestNG’s default HTML (if you prefer that):
-        //publishHTML([
-        //  reportName: 'TestNG HTML Report',
-        //  reportDir: 'test-output',
-        //  reportFiles: 'index.html',
-        //  keepAll: true,
-        //  alwaysLinkToLastBuild: true,
-        //  allowMissing: false
-        //])
+        // 2) Surefire Site HTML
+        publishHTML([
+          reportName: 'Surefire Site Report',
+          reportDir:  'target/site',
+          reportFiles:'surefire-report.html',
+          keepAll:           true,
+          alwaysLinkToLastBuild: true,
+          allowMissing:      false
+        ])
+
+        // 3) TestNG Default HTML
+        publishHTML([
+          reportName: 'TestNG HTML Report',
+          reportDir:  'test-output',
+          reportFiles:'index.html',
+          keepAll:           true,
+          alwaysLinkToLastBuild: true,
+          allowMissing:      false
+        ])
       }
     }
   }
 
   post {
     always {
-      // Publish Allure report
-      allure([
-        results: [[path: 'target/allure-results']],
-        reportBuildPolicy: 'ALWAYS'   // generate even if empty
-      ])
       cleanWs()
     }
   }
