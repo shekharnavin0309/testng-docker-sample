@@ -1,17 +1,8 @@
-// Jenkinsfile
-
 pipeline {
-  agent any
-
-  tools {
-    // name must match what you configured under Manage Jenkins → Global Tool Configuration
-    jdk 'OpenJDK 11'
-    maven 'Maven 3.8'
-  }
+  agent any                           // ensures everything (including post) runs on a node
 
   environment {
-    // any env vars you need
-    MVN_OPTS = '-B'
+    MVN_OPTS = '-B -V'                // batch mode + show versions
   }
 
   stages {
@@ -21,44 +12,40 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Build & Test') {
       steps {
-        sh 'mvn $MVN_OPTS clean compile'
+        // will use whatever `mvn` is on PATH
+        sh "mvn ${MVN_OPTS} clean test"
       }
-    }
-
-    stage('Unit Tests') {
-      steps {
-        sh 'mvn $MVN_OPTS test'
-        junit '**/target/surefire-reports/*.xml'
-      }
-    }
-
-    stage('Build Docker') {
-      when { expression { fileExists('Dockerfile') } }
-      steps {
-        script {
-          docker.build("my-app:${env.BUILD_NUMBER}")
+      post {
+        always {
+          // publish JUnit result regardless of pass/fail
+          junit '**/target/surefire-reports/*.xml' 
         }
       }
     }
 
-    stage('Publish Artifacts') {
+    stage('Package') {
       steps {
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        sh "mvn ${MVN_OPTS} package"
+      }
+      post {
+        success {
+          archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        }
       }
     }
   }
 
   post {
     always {
-      cleanWs()
+      cleanWs()                       // runs on whatever node ran your stages
     }
     success {
-      echo '🎉 Build succeeded!'
+      echo '✅ Pipeline succeeded!'
     }
     failure {
-      echo '🔥 Build failed!'
+      echo '❌ Pipeline failed—see above logs.'
     }
   }
 }
