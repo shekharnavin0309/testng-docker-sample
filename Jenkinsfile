@@ -1,51 +1,54 @@
 pipeline {
-  agent any                           // ensures everything (including post) runs on a node
+  agent any
 
   environment {
-    MVN_OPTS = '-B -V'                // batch mode + show versions
+    MVN = 'mvn -B -V'
   }
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Build & Test') {
       steps {
-        // will use whatever `mvn` is on PATH
-        sh "mvn ${MVN_OPTS} clean test"
+        sh "${MVN} clean test site"
       }
       post {
         always {
-          // publish JUnit result regardless of pass/fail
-          junit '**/target/surefire-reports/*.xml' 
+          junit '**/target/surefire-reports/*.xml'
         }
       }
     }
 
-    stage('Package') {
+    stage('Publish HTML Report') {
       steps {
-        sh "mvn ${MVN_OPTS} package"
-      }
-      post {
-        success {
-          archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-        }
+        // publish the Maven Surefire site report:
+        publishHTML([
+          reportName: 'Surefire Site Report',
+          reportDir: 'target/site', 
+          reportFiles: 'surefire-report.html',
+          keepAll: true,
+          alwaysLinkToLastBuild: true,
+          allowMissing: false
+        ])
+
+        // publish TestNG’s default HTML (if you prefer that):
+        //publishHTML([
+        //  reportName: 'TestNG HTML Report',
+        //  reportDir: 'test-output',
+        //  reportFiles: 'index.html',
+        //  keepAll: true,
+        //  alwaysLinkToLastBuild: true,
+        //  allowMissing: false
+        //])
       }
     }
   }
 
   post {
-    always {
-      cleanWs()                       // runs on whatever node ran your stages
-    }
-    success {
-      echo '✅ Pipeline succeeded!'
-    }
-    failure {
-      echo '❌ Pipeline failed—see above logs.'
-    }
+    always { cleanWs() }
+    success { echo '✅ Done!' }
+    failure { echo '❌ Build failed.' }
   }
 }
