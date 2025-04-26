@@ -15,7 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LoginSteps {
     private WebDriver driver;
@@ -27,6 +29,10 @@ public class LoginSteps {
 
         // create unique profile directory to avoid conflicts
         chromeProfileDir = Files.createTempDirectory("chrome-profile-");
+        System.setProperty("webdriver.chrome.verboseLogging", "true");
+        Map<String, String> logs = new HashMap<>();
+        logs.put("driver", "ALL");
+        logs.put("browser","ALL");
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments(
