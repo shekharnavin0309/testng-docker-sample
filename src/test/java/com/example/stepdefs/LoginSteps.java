@@ -9,19 +9,27 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.testng.Assert;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 
 public class LoginSteps {
     private WebDriver driver;
+    private Path chromeProfileDir;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         WebDriverManager.chromedriver().setup();
+
+        // create unique profile directory to avoid conflicts
+        chromeProfileDir = Files.createTempDirectory("chrome-profile-");
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments(
-            // options for Linux CI
+            "--user-data-dir=" + chromeProfileDir.toAbsolutePath(),
             "--no-sandbox",
             "--disable-dev-shm-usage",
             "--disable-gpu",
@@ -96,9 +104,15 @@ public class LoginSteps {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if (driver != null) {
             driver.quit();
+        }
+        if (chromeProfileDir != null) {
+            Files.walk(chromeProfileDir)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
         }
     }
 }
